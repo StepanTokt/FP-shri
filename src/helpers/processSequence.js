@@ -14,38 +14,60 @@
  * Иногда промисы от API будут приходить в состояние rejected, (прямо как и API в реальной жизни)
  * Ответ будет приходить в поле {result}
  */
- import Api from '../tools/api';
-
+ import { multiply } from 'lodash';
+import Api from '../tools/api';
+ const { test, compose, toString, both, gt, lt, length, allPass, modulo, equals, flip } = require('ramda');
  const api = new Api();
 
- /**
-  * Я – пример, удали меня
-  */
- const wait = time => new Promise(resolve => {
-     setTimeout(resolve, time);
- })
+ const processSequence = async ({value, writeLog, handleSuccess, handleError}) => {
+    writeLog(value)
 
- const processSequence = ({value, writeLog, handleSuccess, handleError}) => {
-     /**
-      * Я – пример, удали меня
-      */
-     writeLog(value);
+    // Проверка, что строка состоит только из цифр и точки
+    const isValidCharacters = test(/^[0-9]*\.?[0-9]+$/);
 
-     api.get('https://api.tech/numbers/base', {from: 2, to: 10, number: '01011010101'}).then(({result}) => {
-         writeLog(result);
-     });
+    // Проверка длины строки
+    const minLength = compose(lt(2), length)
+    const maxLength = compose(gt(10), length)
+    const isLengthValid = both(minLength, maxLength)
 
-     wait(2500).then(() => {
-         writeLog('SecondLog')
+    //больше нуля
+    const isPositive = flip(gt)(0);
 
-         return wait(1500);
-     }).then(() => {
-         writeLog('ThirdLog');
+    // Композиция всех проверок
+    const validate = allPass([
+        isValidCharacters,
+        isLengthValid,
+        isPositive
+    ]);
+    const validateValue = validate(value);  
 
-         return wait(400);
-     }).then(() => {
-         handleSuccess('Done');
-     });
+    //Если ошибка, то выкидываем её
+    const isError = equals(validateValue, false);
+    if(isError) handleError('ValidationError')
+
+    // Преобразовать строку в число и округлить до ближайшего целого
+    const toNumberAndRound = compose(Math.round, Number);
+    const roundedValue = toNumberAndRound(value);
+
+    // Записать округленное значение в writeLog
+    writeLog(roundedValue);
+
+    const { result } = await api.get("https://api.tech/numbers/base", {
+      from: 10,
+      to: 2,
+      number: roundedValue,
+    })
+    writeLog(result);
+
+    const res_length = length(result)
+    writeLog(res_length)
+    
+    const sqr_res_length = multiply(res_length, res_length)
+    writeLog(sqr_res_length)
+
+    const prosThree_sqr_res_length = modulo(sqr_res_length, 3)
+    writeLog(prosThree_sqr_res_length)
+
  }
 
 export default processSequence;
