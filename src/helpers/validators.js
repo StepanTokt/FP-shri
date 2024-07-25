@@ -31,7 +31,6 @@ const isRedStar = propEq('star', 'red');
 const isGreenSquare = propEq('square', 'green');
 const isWhiteTriangle = propEq('triangle', 'white');
 const isWhiteCircle = propEq('circle', 'white');
-const isGreenTriangle = shapes => equals(nth(1, shapes), 'green')
 const isBlueStar = propEq('star', 'blue');
 const isOrangeStar = propEq('star', 'orange');
 const isGreenStar = propEq('star', 'green');
@@ -42,8 +41,11 @@ const isRedEqualBlue = shapes => equals(countRed(shapes), countBlue(shapes))
 const FourColors = [countRed, countBlue, countGreen, countOrange]
 const checkFourColors = map(createColorCheck, FourColors) 
 
-const isTwoGreen = shapes => equals(2, countGreen(shapes));
-const isOneRed = shapes => equals(1, countRed(shapes));
+const isGreenTriangle = propEq('triangle', 'green');
+const hasTwoGreens = compose(equals(2), countGreen);
+const hasOneRed = compose(equals(1), countRed);
+const isOneRed = compose(hasOneRed, getShapes)
+const isTwoGreen = compose(hasTwoGreens, getShapes)
 
 const getTriange = prop('triangle')
 const getSquare = prop('square')
@@ -63,7 +65,7 @@ export const validateFieldN4 = allPass([isRedStar, isBlueCircle, isOrangeSquare]
 // 5. Три фигуры одного любого цвета кроме белого (четыре фигуры одного цвета – это тоже true).
 export const validateFieldN5 = compose(anyPass(checkFourColors), getShapes);
 // 6. Ровно две зеленые фигуры (одна из зелёных – это треугольник), плюс одна красная. Четвёртая оставшаяся любого доступного цвета, но не нарушающая первые два условия
-export const validateFieldN6 = compose(all(Boolean),  shapes => [isTwoGreen(shapes), isOneRed(shapes), isGreenTriangle(shapes)], getShapes);
+export const validateFieldN6 = allPass([isGreenTriangle, isTwoGreen, isOneRed]);
 // 7. Все фигуры оранжевые.
 export const validateFieldN7 = compose(equals(4), countOrange, getShapes);
 // 8. Не красная и не белая звезда, остальные – любого цвета.
