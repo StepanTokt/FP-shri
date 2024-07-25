@@ -14,7 +14,7 @@
  */
 
 
-import {nth, all, lt, allPass, equals, propEq, filter, compose, length, map,  not, prop, anyPass } from 'ramda';
+import {__, gte, identity,dissoc,values,countBy, any, lt, allPass, equals, propEq, filter, compose, length, map,  not, prop, anyPass } from 'ramda';
 
 const filterByColor = compose(filter,equals());
 const countColor = color => compose(length, filterByColor(color));
@@ -24,8 +24,12 @@ const countRed = countColor('red')
 const countOrange = countColor('orange')
 const countBlue = countColor('blue')
 const countGreen = countColor('green')
-const isThreeOrMore = count => count >= 3;
-const createColorCheck = colorCountFunction => compose(isThreeOrMore, colorCountFunction);
+const isGreaterThenThree = gte(__, 3);
+const anyGreaterThenThree = compose(any(isGreaterThenThree), values);
+
+const colorsCount = compose(countBy(identity), values);
+const withoutWhite = dissoc('white');
+const colorCountWithoutWhite = compose(withoutWhite,colorsCount);
 
 const isRedStar = propEq('star', 'red');
 const isGreenSquare = propEq('square', 'green');
@@ -37,10 +41,6 @@ const isGreenStar = propEq('star', 'green');
 const isBlueCircle = propEq('circle', 'blue');
 const isOrangeSquare = propEq('square', 'orange');
 
-const isRedEqualBlue = shapes => equals(countRed(shapes), countBlue(shapes))
-const FourColors = [countRed, countBlue, countGreen, countOrange]
-const checkFourColors = map(createColorCheck, FourColors) 
-
 const isGreenTriangle = propEq('triangle', 'green');
 const hasTwoGreens = compose(equals(2), countGreen);
 const hasOneRed = compose(equals(1), countRed);
@@ -50,6 +50,7 @@ const isTwoGreen = compose(hasTwoGreens, getShapes)
 const getTriange = prop('triangle')
 const getSquare = prop('square')
 
+const isRedEqualBlue = shapes => equals(countRed(shapes), countBlue(shapes))
 const isEqualTriangleToSquare = shape => equals(getTriange(shape), getSquare(shape));
 const isTriangeNotEqualWhite = shape => not(equals(getTriange(shape), 'white'));
 
@@ -63,7 +64,7 @@ export const validateFieldN3 = compose(isRedEqualBlue,getShapes)
 // 4. Синий круг, красная звезда, оранжевый квадрат треугольник любого цвета
 export const validateFieldN4 = allPass([isRedStar, isBlueCircle, isOrangeSquare])
 // 5. Три фигуры одного любого цвета кроме белого (четыре фигуры одного цвета – это тоже true).
-export const validateFieldN5 = compose(anyPass(checkFourColors), getShapes);
+export const validateFieldN5 = compose(anyGreaterThenThree, colorCountWithoutWhite);
 // 6. Ровно две зеленые фигуры (одна из зелёных – это треугольник), плюс одна красная. Четвёртая оставшаяся любого доступного цвета, но не нарушающая первые два условия
 export const validateFieldN6 = allPass([isGreenTriangle, isTwoGreen, isOneRed]);
 // 7. Все фигуры оранжевые.
